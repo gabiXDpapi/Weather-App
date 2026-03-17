@@ -3,6 +3,7 @@ import './App.css';
 import { SearchBar } from './components/SearchBar/SearchBar';
 import { CurrentWeather } from './components/CurrentWeather/CurrentWeather';
 import { Forecast } from './components/Forecast/Forecast';
+import { LoadingSpinner } from './components/LoadingSpinner/LoadingSpinner';
 import type { CurrentWeatherType, ForecastDayType } from './types/weather';
 import { fetchWeatherData, WeatherError } from './services/weatherService';
 
@@ -51,6 +52,7 @@ function App() {
 
   return (
     <div className="app-container">
+      <LoadingSpinner isLoading={loading} />
       <SearchBar onSearch={handleSearch} initialCity="London" disabled={loading} />
       
       {error && (
