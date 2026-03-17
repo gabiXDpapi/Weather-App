@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Weather Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"> 
+    <style>
+        :root { --bg-color: #f0f8ff; --text-color: #333; --card-bg: white; }
+        body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .dashboard { width: 100%; max-width: 1200px; display: flex; flex-direction: column; gap: 20px; margin-top: 20px; }
+        
+        /* Search Bar */
+        .search-container { display: flex; gap: 10px; width: 100%; max-width: 400px; margin: 0 auto; }
+        .search-container input { flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px; }
+        .search-container button { padding: 10px 15px; border: none; background: #007bff; color: white; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        .search-container button:hover { background: #0056b3; }
+        
+        /* Current Weather Card */
+        .weather-card { background: var(--card-bg); padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; }
+        .temp { font-size: 48px; font-weight: bold; }
+        .condition { font-size: 24px; color: #666; margin-bottom: 15px; text-transform: capitalize; }
+        
+        /* Forecast Grid */
+        .forecast-section { width: 100%; }
+        .forecast-container { display: flex; flex-direction: column; gap: 10px; }
+        .forecast-card { background: var(--card-bg); padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        /* Responsive Design: Tablet */
+        @media (min-width: 768px) {
+            .forecast-container { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+            .forecast-card { width: calc(33.333% - 10px); }
+        }
+        
+        /* Responsive Design: Desktop */
+        @media (min-width: 1024px) {
+            .dashboard { flex-direction: row; align-items: flex-start; }
+            .main-weather { flex: 1; }
+            .forecast-section { flex: 2; }
+            .forecast-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
+            .forecast-card { width: auto; }
+        }
+
+        /* Utility classes for dynamic states */
+        .hidden { display: none !important; }
+        .state-message { text-align: center; margin-top: 20px; font-size: 18px; font-weight: bold; }
+        .loading-text { color: #007bff; }
+        .error-text { color: #dc3545; background-color: #f8d7da; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="search-container">
+        <input type="text" id="cityInput" placeholder="Enter city name (e.g., Tokyo)...">
+        <button onclick="fetchWeather()">Search</button>
+    </div>
+    
+    <div id="loadingState" class="state-message loading-text hidden">Fetching live weather data...</div>
+    
+    <div id="errorState" class="state-message error-text hidden"></div>
+
+    <div class="dashboard hidden" id="weatherDashboard">
+        <div class="main-weather weather-card">
+            <h2 id="cityName">City, Country</h2>
+            <img id="weatherIcon" src="" alt="Weather Icon"> 
+            <div class="temp" id="temperature">0°C</div>
+            <div class="condition" id="weatherCondition">Condition</div>
+            <p id="weatherDetails">Humidity: 0% | Wind: 0 km/h</p>
+        </div>
+        
+        <div class="forecast-section">
+            <h3 style="text-align: center;">5-Day Forecast</h3>
+            <div class="forecast-container" id="forecastContainer">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'e191bdeacc9b38a0a3be1fea1284280d'; // Replace with your actual OpenWeatherMap API Key
+
+        async function fetchWeather() {
+            // Get the user input
+            const city = document.getElementById('cityInput').value.trim();
+            if (!city) return;
+
+            // Target DOM elements
+            const dashboard = document.getElementById('weatherDashboard');
+            const loadingState = document.getElementById('loadingState');
+            const errorState = document.getElementById('errorState');
+            
+            // 1. TRIGGER LOADING STATE: Show loading, hide dashboard and errors
+            dashboard.classList.add('hidden');
+            errorState.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+
+            try {
+                // REQUIREMENT: Use fetch() & Retrieve live weather data
+                const weatherRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${API_KEY}`);
+                
+                // REQUIREMENT: Error handling (Check if city is valid)
+                if (!weatherRes.ok) throw new Error("City not found. Please check your spelling and try again.");
+                
+                const weatherData = await weatherRes.json();
+
+                // Fetch 5-Day Forecast data
+                const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${API_KEY}`);
+                const forecastData = await forecastRes.json();
+
+                // REQUIREMENT: Dynamically update the DOM (Current Weather)
+                document.getElementById('cityName').innerText = `${weatherData.name}, ${weatherData.sys.country}`;
+                document.getElementById('weatherIcon').src = `https://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`;
+                document.getElementById('temperature').innerText = `${Math.round(weatherData.main.temp)}°C`;
+                document.getElementById('weatherCondition').innerText = weatherData.weather[0].description;
+                document.getElementById('weatherDetails').innerText = `Humidity: ${weatherData.main.humidity}% | Wind: ${weatherData.wind.speed} m/s`;
+
+                // REQUIREMENT: Dynamically update the DOM (Forecast)
+                const dailyForecasts = forecastData.list.filter((_, index) => index % 8 === 0);
+                const forecastContainer = document.getElementById('forecastContainer');
+                
+                // Build the HTML for the forecast cards dynamically
+                forecastContainer.innerHTML = dailyForecasts.map(day => {
+                    const date = new Date(day.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' });
+                    const icon = `https://openweathermap.org/img/wn/${day.weather[0].icon}.png`;
+                    const temp = `${Math.round(day.main.temp)}°C`;
+                    return `
+                        <div class="forecast-card">
+                            <p><strong>${date}</strong></p>
+                            <img src="${icon}" alt="Weather">
+                            <p>${temp}</p>
+                        </div>
+                    `;
+                }).join('');
+
+                // Show the dashboard now that data is loaded
+                dashboard.classList.remove('hidden');
+
+            } catch (error) {
+                // 2. TRIGGER ERROR STATE: Display the error message to the user
+                errorState.innerText = error.message;
+                errorState.classList.remove('hidden');
+            } finally {
+                // 3. REMOVE LOADING STATE: Always hide the loading spinner when done
+                loadingState.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
