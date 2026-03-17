@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Static Weather Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"> 
+    <style>
+        :root { --bg-color: #f0f8ff; --text-color: #333; --card-bg: white; }
+        body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .dashboard { width: 100%; max-width: 1200px; display: flex; flex-direction: column; gap: 20px; margin-top: 20px; }
+        
+        /* Search Bar */
+        .search-container { display: flex; gap: 10px; width: 100%; max-width: 400px; margin: 0 auto; }
+        .search-container input { flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+        .search-container button { padding: 10px 15px; border: none; background: #007bff; color: white; border-radius: 5px; cursor: pointer; }
+        
+        /* Current Weather Card */
+        .weather-card { background: var(--card-bg); padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; }
+        .temp { font-size: 48px; font-weight: bold; }
+        .condition { font-size: 24px; color: #666; margin-bottom: 15px; }
+        
+        /* Forecast Grid */
+        .forecast-section { width: 100%; }
+        .forecast-container { display: flex; flex-direction: column; gap: 10px; }
+        .forecast-card { background: var(--card-bg); padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        /* Responsive Design: Tablet (Adjusted spacing) */
+        @media (min-width: 768px) {
+            .forecast-container { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+            .forecast-card { width: calc(33.333% - 10px); }
+        }
+        
+        /* Responsive Design: Desktop (Expanded multi-column layout) */
+        @media (min-width: 1024px) {
+            .dashboard { flex-direction: row; align-items: flex-start; }
+            .main-weather { flex: 1; }
+            .forecast-section { flex: 2; }
+            .forecast-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
+            .forecast-card { width: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="search-container">
+        <input type="text" placeholder="Enter city name..." value="London" readonly>
+        <button>Search</button>
+    </div>
+    
+    <div class="dashboard">
+        <div class="main-weather weather-card">
+            <h2>London, UK</h2>
+            <img src="https://openweathermap.org/img/wn/02d@2x.png" alt="Partly Cloudy" loading="lazy"> 
+            <div class="temp">15°C</div>
+            <div class="condition">Partly Cloudy</div>
+            <p>Humidity: 65% | Wind: 10 km/h</p>
+        </div>
+        
+        <div class="forecast-section">
+            <h3 style="text-align: center;">5-Day Forecast</h3>
+            <div class="forecast-container">
+                <div class="forecast-card">
+                    <p>Mon</p>
+                    <img src="https://openweathermap.org/img/wn/01d.png" alt="Sunny" loading="lazy">
+                    <p>18°C</p>
+                </div>
+                <div class="forecast-card">
+                    <p>Tue</p>
+                    <img src="https://openweathermap.org/img/wn/02d.png" alt="Cloudy" loading="lazy">
+                    <p>16°C</p>
+                </div>
+                <div class="forecast-card">
+                    <p>Wed</p>
+                    <img src="https://openweathermap.org/img/wn/09d.png" alt="Rain" loading="lazy">
+                    <p>14°C</p>
+                </div>
+                <div class="forecast-card">
+                    <p>Thu</p>
+                    <img src="https://openweathermap.org/img/wn/10d.png" alt="Rain" loading="lazy">
+                    <p>15°C</p>
+                </div>
+                <div class="forecast-card">
+                    <p>Fri</p>
+                    <img src="https://openweathermap.org/img/wn/01d.png" alt="Sunny" loading="lazy">
+                    <p>19°C</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
