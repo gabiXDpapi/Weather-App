@@ -5,7 +5,7 @@ import { CurrentWeather } from './components/CurrentWeather/CurrentWeather';
 import { Forecast } from './components/Forecast/Forecast';
 import { LoadingSpinner } from './components/LoadingSpinner/LoadingSpinner';
 import type { CurrentWeatherType, ForecastDayType } from './types/weather';
-import { fetchWeatherData, WeatherError } from './services/weatherService';
+import { fetchWeatherData, fetchForecastData, WeatherError } from './services/weatherService';
 
 const initialWeatherData: CurrentWeatherType = {
   city: 'London',
@@ -36,7 +36,9 @@ function App() {
 
     try {
       const weatherData = await fetchWeatherData(city);
+      const forecastData = await fetchForecastData(city);
       setCurrentWeather(weatherData);
+      setForecast(forecastData);
     } catch (err) {
       if (err instanceof WeatherError) {
         setError(err.message);
