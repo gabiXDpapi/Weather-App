@@ -4,14 +4,15 @@ import './SearchBar.css';
 interface SearchBarProps {
     onSearch: (city: string) => void;
     initialCity?: string;
+    disabled?: boolean;
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, initialCity = '' }) => {
+export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, initialCity = '', disabled = false }) => {
     const [city, setCity] = useState(initialCity);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (city.trim()) {
+        if (city.trim() && !disabled) {
             onSearch(city.trim());
         }
     };
@@ -22,10 +23,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, initialCity = ''
                 type="text" 
                 placeholder="Enter city name..." 
                 value={city} 
-                onChange={(e) => setCity(e.target.value)} 
+                onChange={(e) => setCity(e.target.value)}
+                disabled={disabled}
                 className="search-input"
             />
-            <button type="submit" className="search-button">Search</button>
+            <button type="submit" disabled={disabled} className="search-button">{disabled ? 'Loading...' : 'Search'}</button>
         </form>
     );
 };
