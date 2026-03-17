@@ -42,10 +42,13 @@ export async function fetchWeatherData(city: string): Promise<CurrentWeatherType
     );
   }
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
   try {
     const url = `${BASE_URL}/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: controller.signal });
 
     if (!response.ok) {
       if (response.status === 404) {
@@ -117,16 +120,36 @@ export async function fetchWeatherData(city: string): Promise<CurrentWeatherType
       throw error;
     }
 
-    if (error instanceof TypeError) {
+    // Handle timeout/abort errors
+    if (error instanceof DOMException && error.name === 'AbortError') {
       throw new WeatherError(
-        'Network error. Please check your internet connection.',
+        'Request timeout. The server took too long to respond. Please check your internet connection and try again.',
         false,
       );
     }
 
+    // Handle network errors (no internet, DNS failure, CORS, etc.)
+    if (error instanceof TypeError) {
+      // Check if it's a network-related error
+      const message = error.message.toLowerCase();
+      if (message.includes('failed to fetch') || message.includes('network')) {
+        throw new WeatherError(
+          'Unable to fetch weather data. Please check your internet connection and try again.',
+          false,
+        );
+      }
+      throw new WeatherError(
+        'Network error occurred. Please check your internet connection and try again.',
+        false,
+      );
+    }
+
+    // Handle other errors
     throw new WeatherError(
-      error instanceof Error ? error.message : 'An unexpected error occurred.',
+      error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.',
       false,
     );
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
