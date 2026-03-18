@@ -13,7 +13,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, initialCity = ''
     const [city, setCity] = useState(initialCity);
     const [suggestions, setSuggestions] = useState<CitySuggestionType[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
-    const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
+    const [isInputFocused, setIsInputFocused] = useState(false);
     const requestIdRef = useRef(0);
     const hideTimeoutRef = useRef<number | null>(null);
     const suppressSuggestionsRef = useRef(false);
@@ -28,23 +28,22 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, initialCity = ''
         }
 
         const currentRequestId = ++requestIdRef.current;
-        setIsFetchingSuggestions(true);
 
         const timeout = window.setTimeout(async () => {
             try {
                 const results = await fetchCitySuggestions(normalizedCity, 6);
                 if (currentRequestId === requestIdRef.current) {
                     setSuggestions(results);
-                    setShowSuggestions(results.length > 0 && !suppressSuggestionsRef.current);
+                    setShowSuggestions(
+                        results.length > 0 &&
+                        !suppressSuggestionsRef.current &&
+                        isInputFocused,
+                    );
                 }
             } catch {
                 if (currentRequestId === requestIdRef.current) {
                     setSuggestions([]);
                     setShowSuggestions(false);
-                }
-            } finally {
-                if (currentRequestId === requestIdRef.current) {
-                    setIsFetchingSuggestions(false);
                 }
             }
         }, 350);
@@ -52,7 +51,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, initialCity = ''
         return () => {
             window.clearTimeout(timeout);
         };
-    }, [normalizedCity, disabled]);
+    }, [normalizedCity, disabled, isInputFocused]);
 
     useEffect(() => {
         return () => {
@@ -99,8 +98,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, initialCity = ''
                         suppressSuggestionsRef.current = false;
                         setCity(e.target.value);
                     }}
-                    onFocus={() => setShowSuggestions(suggestions.length > 0 && !suppressSuggestionsRef.current)}
+                    onFocus={() => {
+                        setIsInputFocused(true);
+                        setShowSuggestions(suggestions.length > 0 && !suppressSuggestionsRef.current);
+                    }}
                     onBlur={() => {
+                        setIsInputFocused(false);
                         hideTimeoutRef.current = window.setTimeout(() => {
                             setShowSuggestions(false);
                         }, 150);
@@ -131,7 +134,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSearch, initialCity = ''
                     </ul>
                 )}
             </div>
-            <button type="submit" disabled={disabled} className="search-button">{disabled || isFetchingSuggestions ? 'Loading...' : 'Search'}</button>
+            <button type="submit" disabled={disabled} className="search-button">{disabled || 'Search'}</button>
         </form>
     );
 };
