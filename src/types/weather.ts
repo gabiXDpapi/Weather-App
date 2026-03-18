@@ -13,3 +13,11 @@ export interface ForecastDayType {
     temperature: number;
     condition: string;
 }
+
+export interface CitySuggestionType {
+    name: string;
+    country: string;
+    state?: string;
+    lat: number;
+    lon: number;
+}

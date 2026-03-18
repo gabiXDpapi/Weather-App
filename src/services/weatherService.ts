@@ -1,7 +1,8 @@
-import type { CurrentWeatherType, ForecastDayType } from '../types/weather';
+import type { CurrentWeatherType, ForecastDayType, CitySuggestionType } from '../types/weather';
 
 const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
+const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
 
 interface WeatherApiResponse {
   name: string;
@@ -33,6 +34,14 @@ interface ForecastApiResponse {
   }>;
 }
 
+type GeocodingApiResponse = Array<{
+  name: string;
+  lat: number;
+  lon: number;
+  country: string;
+  state?: string;
+}>;
+
 export class WeatherError extends Error {
   isValidationError: boolean;
 
@@ -40,6 +49,57 @@ export class WeatherError extends Error {
     super(message);
     this.name = 'WeatherError';
     this.isValidationError = isValidationError;
+  }
+}
+
+export async function fetchCitySuggestions(query: string, limit: number = 5): Promise<CitySuggestionType[]> {
+  if (!query || query.trim().length < 2) {
+    return [];
+  }
+
+  if (!API_KEY) {
+    return [];
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 7000);
+
+  try {
+    const url = `${GEO_URL}/direct?q=${encodeURIComponent(query.trim())}&limit=${limit}&appid=${API_KEY}`;
+    const response = await fetch(url, { signal: controller.signal });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new WeatherError('Invalid API key. Please check your configuration.', false);
+      }
+      return [];
+    }
+
+    const data: GeocodingApiResponse = await response.json();
+
+    if (!Array.isArray(data)) {
+      return [];
+    }
+
+    return data.map((city) => ({
+      name: city.name,
+      country: city.country,
+      state: city.state,
+      lat: city.lat,
+      lon: city.lon,
+    }));
+  } catch (error) {
+    if (error instanceof WeatherError) {
+      throw error;
+    }
+
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      return [];
+    }
+
+    return [];
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
